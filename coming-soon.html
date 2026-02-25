@@ -38,32 +38,37 @@
 
         .header-text {
             text-align: center;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             z-index: 10;
-            padding: 0 15px;
+            padding: 0 10px;
+            width: 100%;
         }
 
         h1 {
             font-family: var(--heading-font);
-            font-size: clamp(2rem, 5vw, 3rem);
+            /* Dynamically scales to fit any screen, but never exceeds 3rem */
+            font-size: clamp(1.5rem, 9vw, 3rem); 
             margin: 0 0 5px 0;
             text-transform: uppercase;
             text-shadow: 0 0 15px var(--neon-glow);
             letter-spacing: 2px;
+            white-space: nowrap; /* Forces text to stay on one line */
         }
 
         p {
-            font-size: clamp(0.9rem, 2vw, 1.1rem);
+            font-size: clamp(0.85rem, 2.5vw, 1.1rem);
             color: #d8c3ed;
-            margin: 0 0 15px 0;
+            margin: 0 0 10px 0;
         }
 
         /* --- Responsive Game Container --- */
         .game-wrapper {
             position: relative;
             width: 95vw;
-            max-width: 400px; /* Forces portrait mode on desktop */
-            aspect-ratio: 2 / 3;
+            max-width: 450px; 
+            height: 70vh; /* Takes up 70% of the screen height natively */
+            min-height: 450px; /* Prevents it from getting too small */
+            max-height: 800px;
             border: 2px solid var(--cosmic-purple);
             box-shadow: 0 0 30px rgba(157, 78, 221, 0.3), inset 0 0 20px rgba(199, 125, 255, 0.1);
             border-radius: 12px;
@@ -75,7 +80,7 @@
             display: block;
             width: 100%;
             height: 100%;
-            touch-action: none; /* Crucial: Prevents mobile pull-to-refresh & scrolling */
+            touch-action: none; /* Prevents mobile pull-to-refresh & scrolling */
             image-rendering: pixelated; 
         }
 
@@ -128,9 +133,9 @@
             border: 2px solid var(--neon-glow);
             padding: 12px 25px;
             font-family: var(--heading-font);
-            font-size: 1.1rem;
+            font-size: 1rem;
             cursor: pointer;
-            margin: 10px 5px;
+            margin: 8px 5px;
             transition: all 0.3s;
             border-radius: 5px;
             text-transform: uppercase;
@@ -157,29 +162,28 @@
             text-align: center;
         }
 
-        @media screen and (max-height: 700px) {
-            .header-text { margin-bottom: 5px; }
-            h1 { font-size: 1.8rem; }
-            .game-wrapper { aspect-ratio: 16/10; max-height: 60vh; } 
+        @media screen and (max-height: 600px) {
+            /* Extra fixes for incredibly short phone screens (landscape mode) */
+            .header-text { margin-bottom: 2px; }
+            h1 { font-size: 1.5rem; }
+            .controls-hint { display: none; } /* Hide hint to save space */
         }
     </style>
 </head>
 <body>
 
     <div class="header-text">
-        <h1>COMING SOON</h1>
-        <p>Registration opens soon. Calibrate the sensor.</p>
+        <h1>COMING SOON..</h1>
+        <p>Registration opens soon.</p>
     </div>
 
     <div class="game-wrapper">
         <div class="score-board">DATA: <span id="score">0</span></div>
         
-        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        <canvas id="gameCanvas" width="400" height="700"></canvas>
         
         <div class="overlay" id="startScreen">
-            <h2>OOPS...</h2>
-            <p style="font-size: 0.9rem;">Slide finger or use Left/Right arrows.<br>Collect <span style="color:var(--cyan-glow); font-weight:bold;">Cyan Data</span>. Avoid <span style="color:var(--danger-red); font-weight:bold;">Red Noise</span>.</p>
-            <button class="btn" onclick="startGame()">Play Again</button>
+            <button class="btn" onclick="startGame()">Play</button>
             <a href="index.html" class="btn">Return Home</a>
         </div>
 
@@ -188,11 +192,11 @@
             <p>Static Interference Detected.</p>
             <p style="font-size: 1.5rem; font-weight: bold; color: var(--cyan-glow);">Final Data: <span id="finalScore">0</span></p>
             <button class="btn" onclick="resetGame()">Play Again</button>
-            <a href="index.html" class="btn danger">Return Home</a>
+            <a href="index.html" class="btn danger">Return To Home</a>
         </div>
     </div>
 
-    <div class="controls-hint">Touch & drag horizontally to move ship</div>
+    <div class="controls-hint">Arrows || Touch & drag</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
@@ -215,7 +219,7 @@
         const player = {
             width: 46, height: 46,
             x: canvas.width / 2 - 23,
-            y: canvas.height - 70,
+            y: canvas.height - 70, // Adapts to the taller canvas automatically
             speed: 6, dx: 0
         };
 
@@ -237,7 +241,7 @@
             if (!gameActive || isGameOver) return;
             e.preventDefault(); // Stop screen scrolling
             
-            // Map the physical touch position to the canvas's internal 400x600 coordinate system
+            // Map the physical touch position to the canvas's internal coordinate system
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const touchX = (e.touches[0].clientX - rect.left) * scaleX;
