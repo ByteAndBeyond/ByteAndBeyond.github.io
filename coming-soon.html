@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Registration Offline | Byte & Beyond</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +14,7 @@
             --space-black: #05010a;
             --cosmic-purple: #9d4edd;
             --neon-glow: #c77dff;
+            --cyan-glow: #00f0ff;
             --starlight: #f8f9fa;
             --danger-red: #ff003c;
             --heading-font: 'Archivo Black', sans-serif; 
@@ -32,45 +33,50 @@
             justify-content: center;
             min-height: 100vh;
             overflow: hidden;
-            background-image: 
-                radial-gradient(circle at 50% 50%, rgba(26, 8, 38, 0.8) 0%, var(--space-black) 100%),
-                linear-gradient(rgba(199, 125, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(199, 125, 255, 0.05) 1px, transparent 1px);
-            background-size: 100% 100%, 30px 30px, 30px 30px;
+            background-image: radial-gradient(circle at 50% 50%, rgba(26, 8, 38, 0.8) 0%, var(--space-black) 100%);
         }
 
         .header-text {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             z-index: 10;
+            padding: 0 15px;
         }
 
         h1 {
             font-family: var(--heading-font);
-            font-size: 3rem;
-            margin: 0 0 10px 0;
+            font-size: clamp(2rem, 5vw, 3rem);
+            margin: 0 0 5px 0;
             text-transform: uppercase;
             text-shadow: 0 0 15px var(--neon-glow);
             letter-spacing: 2px;
         }
 
         p {
-            font-size: 1.2rem;
+            font-size: clamp(0.9rem, 2vw, 1.1rem);
             color: #d8c3ed;
-            margin: 0 0 20px 0;
+            margin: 0 0 15px 0;
         }
 
-        .game-container {
+        /* --- Responsive Game Container --- */
+        .game-wrapper {
             position: relative;
+            width: 95vw;
+            max-width: 400px; /* Forces portrait mode on desktop */
+            aspect-ratio: 2 / 3;
             border: 2px solid var(--cosmic-purple);
-            box-shadow: 0 0 30px rgba(157, 78, 221, 0.3);
-            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(157, 78, 221, 0.3), inset 0 0 20px rgba(199, 125, 255, 0.1);
+            border-radius: 12px;
             overflow: hidden;
-            background: rgba(5, 1, 10, 0.9);
+            background: rgba(5, 1, 10, 0.95);
         }
 
         canvas {
             display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Crucial: Prevents mobile pull-to-refresh & scrolling */
+            image-rendering: pixelated; 
         }
 
         .score-board {
@@ -79,114 +85,146 @@
             left: 20px;
             font-family: var(--heading-font);
             font-size: 1.5rem;
-            color: var(--starlight);
-            text-shadow: 0 0 10px var(--neon-glow);
+            color: var(--cyan-glow);
+            text-shadow: 0 0 10px var(--cyan-glow);
             z-index: 5;
+            pointer-events: none;
         }
 
-        .game-over {
+        /* --- Overlays (Start & Game Over) --- */
+        .overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5, 1, 10, 0.85);
+            backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             text-align: center;
-            display: none;
-            background: rgba(5, 1, 10, 0.95);
-            padding: 40px;
-            border: 1px solid var(--neon-glow);
-            border-radius: 10px;
-            box-shadow: 0 0 40px var(--cosmic-purple);
             z-index: 10;
+            padding: 20px;
+            box-sizing: border-box;
         }
 
-        .game-over h2 {
+        #gameOverScreen { display: none; }
+
+        .overlay h2 {
             font-family: var(--heading-font);
+            color: var(--starlight);
+            margin: 0 0 15px 0;
+            font-size: 2rem;
+            text-shadow: 0 0 15px var(--neon-glow);
+        }
+
+        #gameOverScreen h2 {
             color: var(--danger-red);
             text-shadow: 0 0 15px var(--danger-red);
-            margin: 0 0 15px 0;
-            font-size: 2.5rem;
         }
 
-        .restart-btn, .back-btn {
-            background: transparent;
+        .btn {
+            background: rgba(157, 78, 221, 0.1);
             color: var(--starlight);
-            border: 1px solid var(--neon-glow);
-            padding: 10px 20px;
-            font-family: var(--body-font);
+            border: 2px solid var(--neon-glow);
+            padding: 12px 25px;
+            font-family: var(--heading-font);
             font-size: 1.1rem;
             cursor: pointer;
-            margin: 10px;
+            margin: 10px 5px;
             transition: all 0.3s;
             border-radius: 5px;
             text-transform: uppercase;
             text-decoration: none;
             display: inline-block;
+            letter-spacing: 1px;
         }
 
-        .restart-btn:hover, .back-btn:hover {
-            background: var(--neon-glow);
-            color: var(--space-black);
-            box-shadow: 0 0 15px var(--neon-glow);
+        .btn:hover {
+            background: rgba(199, 125, 255, 0.3);
+            box-shadow: 0 0 20px var(--neon-glow);
+            transform: translateY(-2px);
         }
+
+        .btn.danger { border-color: var(--danger-red); color: var(--danger-red); }
+        .btn.danger:hover { background: rgba(255, 0, 60, 0.2); box-shadow: 0 0 20px var(--danger-red); color: #fff; }
 
         .controls-hint {
             margin-top: 15px;
             color: #888;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        @media screen and (max-height: 700px) {
+            .header-text { margin-bottom: 5px; }
+            h1 { font-size: 1.8rem; }
+            .game-wrapper { aspect-ratio: 16/10; max-height: 60vh; } 
         }
     </style>
 </head>
 <body>
 
     <div class="header-text">
-        <h1>COMING SOON...</h1>
-        <p>Registration opens soon. Calibrate the sensor to pass the time.</p>
+        <h1>COMING SOON</h1>
+        <p>Registration opens soon. Calibrate the sensor.</p>
     </div>
 
-    <div class="game-container">
+    <div class="game-wrapper">
         <div class="score-board">DATA: <span id="score">0</span></div>
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
         
-        <div class="game-over" id="gameOverScreen">
+        <canvas id="gameCanvas" width="400" height="600"></canvas>
+        
+        <div class="overlay" id="startScreen">
+            <h2>OOPS...</h2>
+            <p style="font-size: 0.9rem;">Slide finger or use Left/Right arrows.<br>Collect <span style="color:var(--cyan-glow); font-weight:bold;">Cyan Data</span>. Avoid <span style="color:var(--danger-red); font-weight:bold;">Red Noise</span>.</p>
+            <button class="btn" onclick="startGame()">Play Again</button>
+            <a href="index.html" class="btn">Return Home</a>
+        </div>
+
+        <div class="overlay" id="gameOverScreen">
             <h2>SYSTEM CRASH</h2>
             <p>Static Interference Detected.</p>
-            <p>Final Data: <span id="finalScore">0</span></p>
-            <button class="restart-btn" onclick="resetGame()">Reboot System</button>
-            <a href="index.html" class="back-btn">Return Home</a>
+            <p style="font-size: 1.5rem; font-weight: bold; color: var(--cyan-glow);">Final Data: <span id="finalScore">0</span></p>
+            <button class="btn" onclick="resetGame()">Play Again</button>
+            <a href="index.html" class="btn danger">Return Home</a>
         </div>
     </div>
 
-    <div class="controls-hint">USE LEFT & RIGHT ARROWS (OR TOUCH) TO MOVE</div>
+    <div class="controls-hint">Touch & drag horizontally to move ship</div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const finalScoreElement = document.getElementById('finalScore');
+        const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
 
         // Game Variables
         let animationId;
         let score = 0;
         let isGameOver = false;
+        let gameActive = false;
         let speedMultiplier = 1;
+        let frameCount = 0;
+        let gridOffset = 0;
 
         // Player (Microchip)
         const player = {
-            x: canvas.width / 2 - 25,
-            y: canvas.height - 40,
-            width: 50,
-            height: 25,
-            speed: 7,
-            dx: 0
+            width: 46, height: 46,
+            x: canvas.width / 2 - 23,
+            y: canvas.height - 70,
+            speed: 6, dx: 0
         };
 
-        // Arrays for falling items
+        // Arrays
         let dataPackets = [];
         let staticNoise = [];
+        let particles = [];
 
-        // Input Handling
+        // --- Controls (Keyboard & Perfected Mobile Touch) ---
         document.addEventListener('keydown', (e) => {
             if (e.key === 'ArrowLeft') player.dx = -player.speed;
             if (e.key === 'ArrowRight') player.dx = player.speed;
@@ -195,129 +233,229 @@
             if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
         });
 
-        // Touch handling for mobile
-        canvas.addEventListener('touchmove', (e) => {
-            e.preventDefault();
-            const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
-            player.x = touchX - player.width / 2;
-        }, { passive: false });
+        function handleTouchMove(e) {
+            if (!gameActive || isGameOver) return;
+            e.preventDefault(); // Stop screen scrolling
+            
+            // Map the physical touch position to the canvas's internal 400x600 coordinate system
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const touchX = (e.touches[0].clientX - rect.left) * scaleX;
+            
+            player.x = touchX - (player.width / 2); // Center chip on finger
+        }
+        
+        canvas.addEventListener('touchstart', handleTouchMove, { passive: false });
+        canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
 
-        // Spawn Mechanics
-        function spawnItem() {
-            if (isGameOver) return;
-            
-            const isNoise = Math.random() < 0.3; // 30% chance of being bad noise
-            const xPos = Math.random() * (canvas.width - 20);
-            
-            if (isNoise) {
-                staticNoise.push({ x: xPos, y: -20, size: 15, speed: (Math.random() * 2 + 3) * speedMultiplier });
-            } else {
-                dataPackets.push({ x: xPos, y: -20, radius: 10, speed: (Math.random() * 2 + 2) * speedMultiplier });
+        // --- Visual Effects & Particles ---
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x; this.y = y;
+                this.color = color;
+                this.size = Math.random() * 4 + 2;
+                this.vx = (Math.random() - 0.5) * 6;
+                this.vy = (Math.random() - 0.5) * 6;
+                this.life = 1;
             }
-            
-            setTimeout(spawnItem, Math.random() * 800 + 400);
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                this.life -= 0.04;
+            }
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fillRect(this.x, this.y, this.size, this.size);
+                ctx.globalAlpha = 1;
+                ctx.shadowBlur = 0;
+            }
         }
 
-        // Draw Player (Microchip look)
+        function createExplosion(x, y, color) {
+            for(let i = 0; i < 15; i++) particles.push(new Particle(x, y, color));
+        }
+
+        // --- Draw Background Grid Effect ---
+        function drawGrid() {
+            gridOffset += 2 * speedMultiplier;
+            if (gridOffset > 40) gridOffset = 0;
+
+            ctx.strokeStyle = 'rgba(157, 78, 221, 0.15)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            
+            // Vertical lines
+            for(let x = 0; x <= canvas.width; x += 40) {
+                ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
+            }
+            // Horizontal moving lines
+            for(let y = gridOffset; y <= canvas.height; y += 40) {
+                ctx.moveTo(0, y); ctx.lineTo(canvas.width, y);
+            }
+            ctx.stroke();
+        }
+
+        // --- Draw Detailed Player (Microchip) ---
         function drawPlayer() {
+            // Chip base
             ctx.fillStyle = '#1a0826';
             ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Chip Border & Glow
             ctx.strokeStyle = '#c77dff';
             ctx.lineWidth = 2;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#c77dff';
             ctx.strokeRect(player.x, player.y, player.width, player.height);
-            
-            // Draw little pins
-            ctx.fillStyle = '#c77dff';
-            for(let i=1; i<5; i++) {
-                ctx.fillRect(player.x + (i*10), player.y - 4, 3, 4);
-            }
+            ctx.shadowBlur = 0;
+
+            // Inner Circuit design
+            ctx.strokeStyle = '#00f0ff';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(player.x + 8, player.y + 8, player.width - 16, player.height - 16);
+            ctx.fillStyle = '#00f0ff';
+            ctx.fillRect(player.x + player.width/2 - 4, player.y + player.height/2 - 4, 8, 8);
+
+            // Engine Thruster glow
+            ctx.fillStyle = (frameCount % 10 < 5) ? '#00f0ff' : 'transparent';
+            ctx.fillRect(player.x + 10, player.y + player.height, player.width - 20, 6);
         }
 
-        // Draw Data (Good)
+        // --- Draw Data (Glowing Diamonds) ---
         function drawDataPackets() {
             ctx.fillStyle = '#00f0ff';
             ctx.shadowBlur = 15;
             ctx.shadowColor = '#00f0ff';
+            
             dataPackets.forEach(p => {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(frameCount * 0.05); // Spin effect
                 ctx.beginPath();
-                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.moveTo(0, -p.size);
+                ctx.lineTo(p.size, 0);
+                ctx.lineTo(0, p.size);
+                ctx.lineTo(-p.size, 0);
                 ctx.fill();
-            });
-            ctx.shadowBlur = 0; // reset
-        }
-
-        // Draw Noise (Bad)
-        function drawStaticNoise() {
-            ctx.fillStyle = '#ff003c';
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#ff003c';
-            staticNoise.forEach(n => {
-                ctx.beginPath();
-                ctx.moveTo(n.x, n.y);
-                ctx.lineTo(n.x + n.size, n.y + n.size);
-                ctx.lineTo(n.x - n.size, n.y + n.size);
-                ctx.fill();
+                ctx.restore();
             });
             ctx.shadowBlur = 0;
         }
 
-        // Movement & Logic
-        function update() {
-            if (isGameOver) return;
+        // --- Draw Noise (Red Glitch Spikes) ---
+        function drawStaticNoise() {
+            ctx.fillStyle = '#ff003c';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff003c';
+            
+            staticNoise.forEach(n => {
+                ctx.save();
+                ctx.translate(n.x, n.y);
+                ctx.rotate(frameCount * -0.05); // Spin reverse
+                ctx.beginPath();
+                ctx.moveTo(0, -n.size);
+                ctx.lineTo(n.size, n.size);
+                ctx.lineTo(-n.size, n.size);
+                ctx.fill();
+                ctx.restore();
+            });
+            ctx.shadowBlur = 0;
+        }
 
-            // Move player
+        // --- Mechanics Logic ---
+        function spawnItem() {
+            if (!gameActive || isGameOver) return;
+            
+            const isNoise = Math.random() < 0.35; // 35% chance of bad noise
+            const spawnX = Math.random() * (canvas.width - 30) + 15; // Keep inside bounds
+            
+            if (isNoise) {
+                staticNoise.push({ x: spawnX, y: -20, size: 12, speed: (Math.random() * 2.5 + 3.5) * speedMultiplier });
+            } else {
+                dataPackets.push({ x: spawnX, y: -20, size: 10, speed: (Math.random() * 2 + 3) * speedMultiplier });
+            }
+            
+            setTimeout(spawnItem, Math.random() * 700 + 400); // Spawn frequency
+        }
+
+        function update() {
+            if (!gameActive || isGameOver) return;
+            frameCount++;
+
+            // Keyboard Move
             player.x += player.dx;
             
-            // Wall collision
+            // Wall Bounds
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
 
-            // Update Data Packets
+            // Update Good Data
             for (let i = 0; i < dataPackets.length; i++) {
                 let p = dataPackets[i];
                 p.y += p.speed;
 
-                // Collision with player
-                if (p.x > player.x && p.x < player.x + player.width &&
-                    p.y + p.radius > player.y && p.y - p.radius < player.y + player.height) {
+                // Hitbox Collision
+                if (p.x + p.size > player.x && p.x - p.size < player.x + player.width &&
+                    p.y + p.size > player.y && p.y - p.size < player.y + player.height) {
+                    
+                    createExplosion(p.x, p.y, '#00f0ff');
                     dataPackets.splice(i, 1);
                     score += 10;
                     scoreElement.innerText = score;
-                    
-                    // Increase difficulty
-                    if (score % 50 === 0) speedMultiplier += 0.2;
+                    if (score % 50 === 0) speedMultiplier += 0.15; // Increase difficulty
                     i--;
                 } 
-                // Fall off screen
-                else if (p.y > canvas.height) {
+                else if (p.y > canvas.height + 20) {
                     dataPackets.splice(i, 1);
                     i--;
                 }
             }
 
-            // Update Static Noise
+            // Update Bad Noise
             for (let i = 0; i < staticNoise.length; i++) {
                 let n = staticNoise[i];
                 n.y += n.speed;
 
-                // Collision with player (GAME OVER)
+                // Hitbox Collision -> GAME OVER
                 if (n.x + n.size > player.x && n.x - n.size < player.x + player.width &&
-                    n.y + n.size > player.y && n.y < player.y + player.height) {
+                    n.y + n.size > player.y && n.y - n.size < player.y + player.height) {
+                    
+                    createExplosion(player.x + player.width/2, player.y + player.height/2, '#ff003c');
                     triggerGameOver();
                 } 
-                // Fall off screen
-                else if (n.y > canvas.height) {
+                else if (n.y > canvas.height + 20) {
                     staticNoise.splice(i, 1);
+                    i--;
+                }
+            }
+
+            // Update Particles
+            for(let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                if(particles[i].life <= 0) {
+                    particles.splice(i, 1);
                     i--;
                 }
             }
         }
 
+        // --- State Management ---
+        function startGame() {
+            startScreen.style.display = 'none';
+            gameActive = true;
+            spawnItem();
+            gameLoop();
+        }
+
         function triggerGameOver() {
             isGameOver = true;
-            cancelAnimationFrame(animationId);
+            gameActive = false;
             finalScoreElement.innerText = score;
-            gameOverScreen.style.display = 'block';
+            setTimeout(() => {
+                gameOverScreen.style.display = 'flex';
+            }, 500); // 0.5s delay to see explosion
         }
 
         function resetGame() {
@@ -326,34 +464,40 @@
             scoreElement.innerText = score;
             dataPackets = [];
             staticNoise = [];
+            particles = [];
             isGameOver = false;
-            player.x = canvas.width / 2 - 25;
+            gameActive = true;
+            player.x = canvas.width / 2 - (player.width/2);
             gameOverScreen.style.display = 'none';
             spawnItem();
-            gameLoop();
         }
 
         function draw() {
-            // Clear canvas with slight trail effect
-            ctx.fillStyle = 'rgba(5, 1, 10, 0.3)';
+            // Dark trail clear
+            ctx.fillStyle = 'rgba(5, 1, 10, 0.4)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            drawPlayer();
+            drawGrid();
             drawDataPackets();
             drawStaticNoise();
+            
+            if(!isGameOver) drawPlayer();
+            
+            particles.forEach(p => p.draw());
         }
 
         function gameLoop() {
             update();
             draw();
-            if (!isGameOver) {
+            if (gameActive || particles.length > 0) {
                 animationId = requestAnimationFrame(gameLoop);
             }
         }
 
-        // Initialize
-        spawnItem();
-        gameLoop();
+        // Draw initial static screen
+        ctx.fillStyle = 'rgba(5, 1, 10, 1)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawPlayer();
     </script>
 </body>
 </html>
