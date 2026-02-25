@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Offline | Byte & Beyond</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Grotesk:wght@300;400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --space-black: #05010a;
+            --cosmic-purple: #9d4edd;
+            --neon-glow: #c77dff;
+            --starlight: #f8f9fa;
+            --danger-red: #ff003c;
+            --heading-font: 'Archivo Black', sans-serif; 
+            --body-font: 'Space Grotesk', sans-serif;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--space-black);
+            color: var(--starlight);
+            font-family: var(--body-font);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(26, 8, 38, 0.8) 0%, var(--space-black) 100%),
+                linear-gradient(rgba(199, 125, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(199, 125, 255, 0.05) 1px, transparent 1px);
+            background-size: 100% 100%, 30px 30px, 30px 30px;
+        }
+
+        .header-text {
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 10;
+        }
+
+        h1 {
+            font-family: var(--heading-font);
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            text-shadow: 0 0 15px var(--neon-glow);
+            letter-spacing: 2px;
+        }
+
+        p {
+            font-size: 1.2rem;
+            color: #d8c3ed;
+            margin: 0 0 20px 0;
+        }
+
+        .game-container {
+            position: relative;
+            border: 2px solid var(--cosmic-purple);
+            box-shadow: 0 0 30px rgba(157, 78, 221, 0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            background: rgba(5, 1, 10, 0.9);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .score-board {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            font-family: var(--heading-font);
+            font-size: 1.5rem;
+            color: var(--starlight);
+            text-shadow: 0 0 10px var(--neon-glow);
+            z-index: 5;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            display: none;
+            background: rgba(5, 1, 10, 0.95);
+            padding: 40px;
+            border: 1px solid var(--neon-glow);
+            border-radius: 10px;
+            box-shadow: 0 0 40px var(--cosmic-purple);
+            z-index: 10;
+        }
+
+        .game-over h2 {
+            font-family: var(--heading-font);
+            color: var(--danger-red);
+            text-shadow: 0 0 15px var(--danger-red);
+            margin: 0 0 15px 0;
+            font-size: 2.5rem;
+        }
+
+        .restart-btn, .back-btn {
+            background: transparent;
+            color: var(--starlight);
+            border: 1px solid var(--neon-glow);
+            padding: 10px 20px;
+            font-family: var(--body-font);
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s;
+            border-radius: 5px;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .restart-btn:hover, .back-btn:hover {
+            background: var(--neon-glow);
+            color: var(--space-black);
+            box-shadow: 0 0 15px var(--neon-glow);
+        }
+
+        .controls-hint {
+            margin-top: 15px;
+            color: #888;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-text">
+        <h1>COMING SOON...</h1>
+        <p>Registration opens soon. Calibrate the sensor to pass the time.</p>
+    </div>
+
+    <div class="game-container">
+        <div class="score-board">DATA: <span id="score">0</span></div>
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        
+        <div class="game-over" id="gameOverScreen">
+            <h2>SYSTEM CRASH</h2>
+            <p>Static Interference Detected.</p>
+            <p>Final Data: <span id="finalScore">0</span></p>
+            <button class="restart-btn" onclick="resetGame()">Reboot System</button>
+            <a href="index.html" class="back-btn">Return Home</a>
+        </div>
+    </div>
+
+    <div class="controls-hint">USE LEFT & RIGHT ARROWS (OR TOUCH) TO MOVE</div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const finalScoreElement = document.getElementById('finalScore');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+
+        // Game Variables
+        let animationId;
+        let score = 0;
+        let isGameOver = false;
+        let speedMultiplier = 1;
+
+        // Player (Microchip)
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 40,
+            width: 50,
+            height: 25,
+            speed: 7,
+            dx: 0
+        };
+
+        // Arrays for falling items
+        let dataPackets = [];
+        let staticNoise = [];
+
+        // Input Handling
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') player.dx = -player.speed;
+            if (e.key === 'ArrowRight') player.dx = player.speed;
+        });
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+        });
+
+        // Touch handling for mobile
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+            player.x = touchX - player.width / 2;
+        }, { passive: false });
+
+        // Spawn Mechanics
+        function spawnItem() {
+            if (isGameOver) return;
+            
+            const isNoise = Math.random() < 0.3; // 30% chance of being bad noise
+            const xPos = Math.random() * (canvas.width - 20);
+            
+            if (isNoise) {
+                staticNoise.push({ x: xPos, y: -20, size: 15, speed: (Math.random() * 2 + 3) * speedMultiplier });
+            } else {
+                dataPackets.push({ x: xPos, y: -20, radius: 10, speed: (Math.random() * 2 + 2) * speedMultiplier });
+            }
+            
+            setTimeout(spawnItem, Math.random() * 800 + 400);
+        }
+
+        // Draw Player (Microchip look)
+        function drawPlayer() {
+            ctx.fillStyle = '#1a0826';
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.strokeStyle = '#c77dff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(player.x, player.y, player.width, player.height);
+            
+            // Draw little pins
+            ctx.fillStyle = '#c77dff';
+            for(let i=1; i<5; i++) {
+                ctx.fillRect(player.x + (i*10), player.y - 4, 3, 4);
+            }
+        }
+
+        // Draw Data (Good)
+        function drawDataPackets() {
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00f0ff';
+            dataPackets.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0; // reset
+        }
+
+        // Draw Noise (Bad)
+        function drawStaticNoise() {
+            ctx.fillStyle = '#ff003c';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ff003c';
+            staticNoise.forEach(n => {
+                ctx.beginPath();
+                ctx.moveTo(n.x, n.y);
+                ctx.lineTo(n.x + n.size, n.y + n.size);
+                ctx.lineTo(n.x - n.size, n.y + n.size);
+                ctx.fill();
+            });
+            ctx.shadowBlur = 0;
+        }
+
+        // Movement & Logic
+        function update() {
+            if (isGameOver) return;
+
+            // Move player
+            player.x += player.dx;
+            
+            // Wall collision
+            if (player.x < 0) player.x = 0;
+            if (player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            // Update Data Packets
+            for (let i = 0; i < dataPackets.length; i++) {
+                let p = dataPackets[i];
+                p.y += p.speed;
+
+                // Collision with player
+                if (p.x > player.x && p.x < player.x + player.width &&
+                    p.y + p.radius > player.y && p.y - p.radius < player.y + player.height) {
+                    dataPackets.splice(i, 1);
+                    score += 10;
+                    scoreElement.innerText = score;
+                    
+                    // Increase difficulty
+                    if (score % 50 === 0) speedMultiplier += 0.2;
+                    i--;
+                } 
+                // Fall off screen
+                else if (p.y > canvas.height) {
+                    dataPackets.splice(i, 1);
+                    i--;
+                }
+            }
+
+            // Update Static Noise
+            for (let i = 0; i < staticNoise.length; i++) {
+                let n = staticNoise[i];
+                n.y += n.speed;
+
+                // Collision with player (GAME OVER)
+                if (n.x + n.size > player.x && n.x - n.size < player.x + player.width &&
+                    n.y + n.size > player.y && n.y < player.y + player.height) {
+                    triggerGameOver();
+                } 
+                // Fall off screen
+                else if (n.y > canvas.height) {
+                    staticNoise.splice(i, 1);
+                    i--;
+                }
+            }
+        }
+
+        function triggerGameOver() {
+            isGameOver = true;
+            cancelAnimationFrame(animationId);
+            finalScoreElement.innerText = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        function resetGame() {
+            score = 0;
+            speedMultiplier = 1;
+            scoreElement.innerText = score;
+            dataPackets = [];
+            staticNoise = [];
+            isGameOver = false;
+            player.x = canvas.width / 2 - 25;
+            gameOverScreen.style.display = 'none';
+            spawnItem();
+            gameLoop();
+        }
+
+        function draw() {
+            // Clear canvas with slight trail effect
+            ctx.fillStyle = 'rgba(5, 1, 10, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawPlayer();
+            drawDataPackets();
+            drawStaticNoise();
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            if (!isGameOver) {
+                animationId = requestAnimationFrame(gameLoop);
+            }
+        }
+
+        // Initialize
+        spawnItem();
+        gameLoop();
+    </script>
+</body>
+</html>
